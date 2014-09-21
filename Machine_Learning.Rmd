@@ -48,7 +48,7 @@ which(M>0.95,arr.ind=T)
 qplot(training$roll_belt,training$gyros_belt_z,col=classe,data=training)
 ```
 
-But in the end I decided on using a boosting model because of the large number of variables. I did a 25-fold cross-validation and got an accuracy of 0.886. If I used a bigger amount of training data and more cross-validation I would get a better accuracy as well.
+But in the end I decided on using a boosting model because of the large number of variables. I did a 25-fold cross-validation and got an accuracy of 0.886. If I used a bigger amount of training data and more cross-validation I would get a better accuracy as well. Correction,I did and now accuracy is 0.9+
 
 ```{r,tidy=TRUE}
 set.seed(33333)
