@@ -10,7 +10,7 @@ In this document I will try to train an algorithm to distinguish between differe
 
 Here first, I am loading the training and the test dataset.
 
-```{r,tidy=TRUE}
+```{r,tidy=TRUE,message=FALSE,warning=FALSE}
 library(caret)
 library(e1071)
 library(randomForest)
@@ -20,23 +20,27 @@ library(ggplot2)
 training <- read.csv("pml-training.csv")
 testing <-read.csv("pml-testing.csv")
 ```
+
 Then I look at the training dataset and see that a lot of columns are practically empty so I remove those ones to get a tidy dataset. Doing the same as well for the test one.
-```{r,tidy=TRUE}
-head(training)
+
+```{r,tidy=TRUE,results='hide'}
+head(training) #hidden results because 160 columns
 training <- training[,c(2,8,9,10,11,37,38,39,40,41,42,43,44,45,46,47,48,49,60,61,62,63,64,65,66,67,68,84,85,86,102,
                             113,114,115,116,117,118,119,120,121,122,123,124,140,151,152,153,154,155,156,157,158,159,160)]
 testing <- testing[,c(2,8,9,10,11,37,38,39,40,41,42,43,44,45,46,47,48,49,60,61,62,63,64,65,66,67,68,84,85,86,102,
                             113,114,115,116,117,118,119,120,121,122,123,124,140,151,152,153,154,155,156,157,158,159,160)]
 ```
+
 Then it is time to fit the model. I used a smaller sample of the training set because it would otherwise crash my pc.
 
 ```{r,tidy=TRUE}
-training1 <- training[sample(nrow(training),1000,replace=F),]
-training_val <- training[sample(nrow(training),1000,replace=F),]
+training1 <- training[sample(nrow(training),5000,replace=F),]
 inTrain <- createDataPartition(y=training1$classe,p=1,list=FALSE)
 training1 <- training1[inTrain,]
 ``` 
+
 Also since there were still a lot of variables left I tried to find some correlated predictors. And when I removed the results that contained the individuals I got one nice hit.
+
 ```{r,tidy=TRUE}
 M <- abs(cor(training1[,-c(1,54)]))
 diag(M) <-0
@@ -44,17 +48,17 @@ which(M>0.95,arr.ind=T)
 qplot(training$roll_belt,training$gyros_belt_z,col=classe,data=training)
 ```
 
-But in the end I decided on using a boosting model because of the large number of variables. I did a 25-fold cross-validation and got an accuracy of 0.886. If I used a bigger amount of training data and more crossvalidation I would get a better accuracy as well.
+But in the end I decided on using a boosting model because of the large number of variables. I did a 25-fold cross-validation and got an accuracy of 0.886. If I used a bigger amount of training data and more cross-validation I would get a better accuracy as well.
 
 ```{r,tidy=TRUE}
 set.seed(33333)
-#modelFit <-train(classe ~.,data=training2,method="rf",prox=TRUE)
 modFit <- train(classe ~., preProcess=c("center","scale"),method="gbm",data=training1,verbose=FALSE,trControl = trainControl(method = "cv",25))
 print(modFit)
 ```
 
 And I used also a small subset of the training data to see how well does my prediction algorithm work. Interestingly it doesnt seem that the errors came from measurments that are outliers in the 5 most correlated variables.
-```{r}
+
+```{r,message=FALSE,warning=FALSE}
 library(gridExtra)
 training_val <- training[sample(nrow(training),100,replace=F),]
 inTrain_val <- createDataPartition(y=training_val$classe,p=1,list=FALSE)
